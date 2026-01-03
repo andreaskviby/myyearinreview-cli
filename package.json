@@ -1,0 +1,35 @@
+{
+  "name": "myyearinreview",
+  "version": "1.0.0",
+  "description": "Generate your Year in Review from Git commits",
+  "main": "index.js",
+  "bin": {
+    "myyearinreview": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "git",
+    "year-in-review",
+    "developer",
+    "commits",
+    "statistics"
+  ],
+  "author": "MyYearInReview",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andreaskviby/myyearinreview"
+  },
+  "homepage": "https://myyearinreview.dev",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "ora": "^8.0.0",
+    "inquirer": "^9.2.0"
+  }
+}
