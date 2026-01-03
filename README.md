@@ -4,14 +4,10 @@ Generate your Year in Review from Git commits.
 
 ## Installation
 
-```bash
-npm install -g myyearinreview
-```
-
-Or run directly with npx:
+Run directly with npx (no installation required):
 
 ```bash
-npx myyearinreview --key=YOUR_KEY
+npx github:andreaskviby/myyearinreview-cli --key=YOUR_KEY
 ```
 
 ## Usage
@@ -25,7 +21,7 @@ npx myyearinreview --key=YOUR_KEY
 
 3. Run the CLI:
    ```bash
-   npx myyearinreview --key=usr_yourkey123
+   npx github:andreaskviby/myyearinreview-cli --key=usr_yourkey123
    ```
 
 4. Select which repositories to include
@@ -48,17 +44,17 @@ npx myyearinreview --key=YOUR_KEY
 
 Analyze 2024 commits:
 ```bash
-npx myyearinreview --key=usr_xxx --year=2024
+npx github:andreaskviby/myyearinreview-cli --key=usr_xxx --year=2024
 ```
 
 Scan a specific directory:
 ```bash
-npx myyearinreview --key=usr_xxx --dir=~/code
+npx github:andreaskviby/myyearinreview-cli --key=usr_xxx --dir=~/code
 ```
 
 Use a specific email:
 ```bash
-npx myyearinreview --key=usr_xxx --email=me@example.com
+npx github:andreaskviby/myyearinreview-cli --key=usr_xxx --email=me@example.com
 ```
 
 ## Privacy
