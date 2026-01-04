@@ -2,6 +2,7 @@
   "name": "myyearinreview",
   "version": "1.0.0",
   "description": "Generate your Year in Review from Git commits",
+  "type": "module",
   "main": "index.js",
   "bin": {
     "myyearinreview": "./index.js"

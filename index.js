@@ -9,7 +9,8 @@ import ora from 'ora';
 import { program } from 'commander';
 import inquirer from 'inquirer';
 
-const API_URL = 'https://myyearinreview.dev/api/year-review/upload';
+const PRODUCTION_API_URL = 'https://myyearinreview.dev/api/year-review/upload';
+const LOCAL_API_URL = 'http://myyearinreview.test/api/year-review/upload';
 const CONFIG_DIR = join(homedir(), '.myyearinreview');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
@@ -22,19 +23,28 @@ program
   .option('-d, --dir <directory>', 'Directory to scan for git repos (default: current)', '.')
   .option('-e, --email <email>', 'Filter commits by author email')
   .option('--depth <depth>', 'How deep to scan for repos (default: 2)', '2')
+  .option('--local', 'Use local development server (myyearinreview.test)')
   .parse();
 
 const options = program.opts();
 
 async function main() {
+  const isLocal = options.local;
+  const API_URL = isLocal ? LOCAL_API_URL : PRODUCTION_API_URL;
+  const dashboardUrl = isLocal ? 'http://myyearinreview.test/dashboard' : 'https://myyearinreview.dev/dashboard';
+
   console.log(chalk.bold.green('\n  MyYearInReview CLI\n'));
   console.log(chalk.gray('  Generate your Year in Review from Git commits\n'));
+
+  if (isLocal) {
+    console.log(chalk.yellow('  ⚠ Using local development server\n'));
+  }
 
   let uploadKey = options.key || loadSavedKey();
 
   if (!uploadKey) {
     console.log(chalk.yellow('  No upload key found.\n'));
-    console.log(chalk.white('  Get your key at: ') + chalk.cyan('https://myyearinreview.dev/dashboard\n'));
+    console.log(chalk.white('  Get your key at: ') + chalk.cyan(dashboardUrl + '\n'));
 
     const { key } = await inquirer.prompt([{
       type: 'input',
