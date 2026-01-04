@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 import { existsSync, readdirSync, statSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, basename } from 'path';
 import { homedir } from 'os';
+import { gzipSync } from 'zlib';
 import chalk from 'chalk';
 import ora from 'ora';
 import { program } from 'commander';
@@ -139,17 +140,26 @@ async function main() {
   const uploadSpinner = ora('Uploading data...').start();
 
   try {
+    // Compress the payload with gzip
+    const jsonPayload = JSON.stringify({
+      key: uploadKey,
+      year: year,
+      data: data
+    });
+    const compressedPayload = gzipSync(jsonPayload);
+
+    const originalSize = Buffer.byteLength(jsonPayload);
+    const compressedSize = compressedPayload.length;
+    uploadSpinner.text = `Uploading data... (${(compressedSize / 1024).toFixed(1)}KB compressed from ${(originalSize / 1024).toFixed(1)}KB)`;
+
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Content-Encoding': 'gzip',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        key: uploadKey,
-        year: year,
-        data: data
-      })
+      body: compressedPayload
     });
 
     const result = await response.json();
