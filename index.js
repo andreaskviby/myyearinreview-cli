@@ -225,10 +225,10 @@ function analyzeRepos(repos, year, authorEmail) {
       const startDate = `${year}-01-01`;
       const endDate = `${year}-12-31`;
 
-      // Get commits with stats
+      // Get commits with numstat (excludes merges for accurate stats)
       const logFormat = '%H|%aI|%s|%ae';
       const gitLog = execSync(
-        `git -C "${repoPath}" log --author="${authorEmail}" --since="${startDate}" --until="${endDate}" --format="${logFormat}" --shortstat 2>/dev/null`,
+        `git -C "${repoPath}" log --no-merges --author="${authorEmail}" --since="${startDate}" --until="${endDate}" --format="${logFormat}" --numstat 2>/dev/null`,
         { encoding: 'utf-8', maxBuffer: 50 * 1024 * 1024 }
       );
 
@@ -239,7 +239,13 @@ function analyzeRepos(repos, year, authorEmail) {
       let currentCommit = null;
 
       for (const line of lines) {
-        if (line.includes('|')) {
+        if (line.includes('|') && line.split('|').length >= 4) {
+          // Save previous commit if exists
+          if (currentCommit) {
+            allCommits.push(currentCommit);
+            repoCommits++;
+          }
+
           const [hash, date, message, email] = line.split('|');
           if (email && email.toLowerCase() === authorEmail.toLowerCase()) {
             currentCommit = { hash, date, message, repo: repoName, additions: 0, deletions: 0 };
@@ -247,47 +253,37 @@ function analyzeRepos(repos, year, authorEmail) {
             const commitDate = new Date(date);
             hourlyDistribution[commitDate.getHours()]++;
             dailyDistribution[commitDate.getDay()]++;
-          }
-        } else if (line.includes('insertion') || line.includes('deletion')) {
-          if (currentCommit) {
-            const insertMatch = line.match(/(\d+) insertion/);
-            const deleteMatch = line.match(/(\d+) deletion/);
-
-            if (insertMatch) {
-              currentCommit.additions = parseInt(insertMatch[1]);
-              repoAdditions += currentCommit.additions;
-            }
-            if (deleteMatch) {
-              currentCommit.deletions = parseInt(deleteMatch[1]);
-              repoDeletions += currentCommit.deletions;
-            }
-
-            allCommits.push(currentCommit);
-            repoCommits++;
+          } else {
             currentCommit = null;
           }
+        } else if (currentCommit && line.match(/^\d+\t\d+\t/)) {
+          // numstat line format: additions<tab>deletions<tab>filename
+          const parts = line.split('\t');
+          if (parts.length >= 3) {
+            const adds = parseInt(parts[0]) || 0;
+            const dels = parseInt(parts[1]) || 0;
+            currentCommit.additions += adds;
+            currentCommit.deletions += dels;
+            repoAdditions += adds;
+            repoDeletions += dels;
+
+            // Track file types
+            const filename = parts[2];
+            if (filename) {
+              const ext = filename.split('.').pop()?.toLowerCase() || 'other';
+              fileTypes[ext] = (fileTypes[ext] || 0) + 1;
+            }
+          }
         } else if (currentCommit && line.trim() === '') {
-          // Commit without stats
-          allCommits.push(currentCommit);
-          repoCommits++;
-          currentCommit = null;
+          // Empty line - commit block ended, will be saved when next commit starts
         }
       }
 
-      // Get file types
-      try {
-        const files = execSync(
-          `git -C "${repoPath}" log --author="${authorEmail}" --since="${startDate}" --until="${endDate}" --name-only --format="" 2>/dev/null`,
-          { encoding: 'utf-8', maxBuffer: 50 * 1024 * 1024 }
-        );
-
-        for (const file of files.split('\n')) {
-          if (file.trim()) {
-            const ext = file.split('.').pop()?.toLowerCase() || 'other';
-            fileTypes[ext] = (fileTypes[ext] || 0) + 1;
-          }
-        }
-      } catch {}
+      // Don't forget the last commit
+      if (currentCommit) {
+        allCommits.push(currentCommit);
+        repoCommits++;
+      }
 
       if (repoCommits > 0) {
         repositories.push({
